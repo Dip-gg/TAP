@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps TAP Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
+
+    <style>
+        .navbar {
+            background-color: #fff;
+        }
+
+        .active {
+            color: #5f3a0a !important;
+        }
+
+        .clear-filter {
+            margin-right: 10px;
+        }
+
+        .toggle-card-table {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown-container {
+            display: flex;
+        }
+
+        .card {
+            margin-bottom: 0;
+            height: 10.5rem;
+        }
+
+        .dropdown-toggle {
+            background-color: #B88746;
+            border-color: #B88746;
+        }
+
+        .btn:active {
+            background-color: #855313 !important;
+            border-color: #855313 !important;
+        }
+
+        .btn-primary:hover {
+            background-color: #855313;
+            border-color: #855313;
+        }
+
+        .btn.show {
+            background-color: #855313;
+            border-color: #855313;
+        }
+
+        .build-number {
+            font-size: larger;
+            /* color: #000; */
+        }
+
+        .status-brown {
+            border-radius: 5px 5px 0px 0px;
+            background-image: linear-gradient(#866D4B, #B88746);
+            position: relative;
+        }
+
+        /* .status-amber {
+            border-radius: 5px 5px 0px 0px;
+            background-image: linear-gradient(#b49d59, #FFBF00);
+            position: relative;
+        } */
+
+        .status-text-brown {
+            color: #866D4B;
+        }
+
+        .card-title {
+            margin-bottom: 0px;
+        }
+
+        .card .icon-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            /* background-color: #a8a8a8; */
+            align-items: center;
+            background-image: linear-gradient(#ECEFF1, #CFD8DC);
+            position: relative;
+        }
+
+        .card .icon-container .info-btn {
+            /* position: relative; */
+            cursor: pointer;
+        }
+
+        .card .icon-container .info-container {
+            font-size: small;
+            background-color: #fff;
+            border: 2px solid #000;
+            position: absolute;
+            /* z-index: 100; */
+        }
+
+        .card .icon-container div {
+            border-right: 2px solid #c9c9c9;
+        }
+
+        .card .icon-container div:last-child {
+            border-right: none;
+        }
+
+        .key-container {
+            width: 40%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .card .icon-container .img-container {
+            width: 60%;
+        }
+
+        .card .icon-container .img-container .new-icon {
+            width: 35%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+        }
+
+        .card .icon-container .img-container img {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .card-body {
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            /* padding-left: 1rem; */
+        }
+
+        .card-body .state-holder {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 5px;
+            padding-right: 5px;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .warning-icon {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            left: -60%;
+        }
+
+        .card-body .state-holder span {
+            display: flex;
+            width: 100%;
+            align-self: center;
+            justify-content: space-evenly;
+            /* padding: 5px; */
+            line-height: 1.8;
+            margin-bottom: 2px;
+            flex-direction: row;
+            align-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-background-blue {
+            background-color: #004B93;
+        }
+
+        .status-background-orange {
+            background-color: #ff9300
+        }
+
+        .status-background-red {
+            background-color: #F40009;
+        }
+
+        .status-background-green {
+            background-color: #00704A;
+        }
+
+        .card-text {
+            font-size: 14px;
+        }
+
+        .owner-name {
+            cursor: pointer;
+        }
+
+        .budget {
+            height: 10px;
+            width: 20px;
+        }
+
+        .budget-green {
+            background-image: linear-gradient(#5ff077, #1bb93e);
+        }
+
+        .budget-amber {
+            background-image: linear-gradient(#FF671F, #ff9300);
+        }
+
+        .budget-red {
+            background-image: linear-gradient(#F40009, #CE3D42);
+        }
+
+        .budget-blue {
+            background-image: linear-gradient(#007CB4, #004B93);
+        }
+
+        .budget-grey {
+            background-image: linear-gradient(#D1D3D4, #717073);
+        }
+
+        label {
+            margin: 0;
+        }
+
+        .expand {
+            height: 25px;
+            cursor: pointer;
+            right: 2%;
+            top: 2%;
+            position: absolute;
+            z-index: 10;
+        }
+
+        .star {
+            height: 25px;
+            cursor: pointer;
+            right: 11%;
+            top: 2%;
+            position: absolute;
+            z-index: 10;
+        }
+
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            /* margin-top: 20px; */
+        }
+
+        /* Individual bars with different heights */
+        .bar {
+            width: 5px;
+            background-color: #b0b0b0;
+            border-radius: 2px;
+            transition: background-color 0.3s ease;
+        }
+
+        .bar1 {
+            height: 5px;
+        }
+
+        .bar2 {
+            height: 10px;
+        }
+
+        .bar3 {
+            height: 15px;
+        }
+
+        .bar4 {
+            height: 20px;
+        }
+
+        .filled {
+            background-color: blue;
+        }
+
+        .project-size-icon {
+            height: 30px;
+            width: 30px;
+        }
+
+        .trend-icon {
+            height: 25px;
+            width: 30px;
+        }
+
+        .info-holder p {
+            line-height: 1;
+        }
+
+        .modal.fade.show {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-fullscreen {
+            width: 90vw;
+            max-width: none;
+        }
+
+        .rag-status p {
+            display: flex;
+        }
+
+
+        .rag-status-cell .signal-bars {
+            margin-top: 5px;
+        }
+
+        #data-table_wrapper {
+            display: none;
+        }
+
+        #data-table {
+            display: none;
+        }
+
+        #downloadExcel {
+            margin-left: 5px;
+            background-color: #0000ff;
+        }
+
+        .download-excel {
+            height: 20px;
+            width: 20px;
+        }
+
+        .footer-container {
+            position: relative;
+        }
+
+        .devops-image {
+            position: absolute;
+            right: 3%;
+            bottom: 20%;
+        }
+
+        .devops-image img {
+            height: 30px;
+            width: 55px;
+        }
+
+        /* For 80% zoom (or very wide screens) */
+        @media screen and (min-width: 1500px) {
+            .build-number {
+                font-size: 1.1rem;
+            }
+
+            .expand {
+                height: 25px;
+            }
+
+            .toggle-card-table {
+                height: 35px;
+                width: 35px;
+            }
+        }
+
+        /* For 100% zoom (default, screens around 1200px to 1500px) */
+        @media screen and (min-width: 1200px) and (max-width: 1500px) {
+
+            .card {
+                height: 10.5rem;
+            }
+
+            .card-body {
+                padding: 0;
+            }
+
+            .card-body .state-holder {
+                font-size: small;
+            }
+
+            .build-number {
+                font-size: medium;
+            }
+
+            .expand {
+                height: 25px;
+            }
+
+            .toggle-card-table {
+                height: 30px;
+                width: 30px;
+            }
+
+            .info-holder {
+                font-size: small;
+            }
+        }
+
+        /* For 110% zoom (screens around 1100px to 1200px) */
+        @media screen and (min-width: 1100px) and (max-width: 1200px) {
+            .card {
+                height: 11rem;
+            }
+
+            .card-body {
+                padding: 0;
+            }
+
+            .card-body .state-holder {
+                font-size: small;
+            }
+
+            .build-number {
+                font-size: medium;
+            }
+
+            .expand {
+                height: 25px;
+            }
+
+            .toggle-card-table {
+                height: 28px;
+                width: 28px;
+            }
+
+            .info-holder {
+                font-size: small;
+            }
+        }
+
+        /* For 125% zoom (screens around 900px to 1100px) */
+        @media screen and (min-width: 900px) and (max-width: 1100px) {
+            .card {
+                height: 11rem;
+            }
+
+            .card-body {
+                padding: 0;
+            }
+
+            .card-body .state-holder {
+                font-size: small;
+            }
+
+            .build-number {
+                font-size: small;
+            }
+
+            .expand {
+                height: 25px;
+            }
+
+            .toggle-card-table {
+                height: 25px;
+                width: 25px;
+            }
+
+            .info-holder {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <h2>Trading Application Portfolio</h2>
+            </a>
+            <img class="logo" src="{{url_for('static', filename='images/logo.svg')}}" alt="logo">
+        </div>
+    </nav>
+    <div class="body-container container-fluid">
+        <div class="tab-container">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link group-link active" aria-current="page" href="#" data-db-type="all">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link group-link" href="#" data-db-type="weekly">Weekly</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link group-link" href="#" data-db-type="fortnightly">Fortnightly</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link group-link" href="#" data-db-type="monthly">Monthly</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link group-link" href="#" data-db-type="pinned">Pinned</a>
+                </li>
+            </ul>
+            <div style="display: flex;">
+                <div class="toggle-card-table" title="Toggle card/table">
+                    <img class="toggle" src="static/images/table-view.png" style="height: 40px" alt="">
+                    <!-- <button type="button" class="toggle btn btn-info">Table-View</button> -->
+                </div>
+                <div class="refresh-data" title="Refresh" style="margin-right: 10px;">
+                    <img src="static/images/icons8-refresh.png" style="height: 40px; cursor: pointer;" alt=""
+                        onclick="fetchTimeStamp()">
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-holder container-fluid">
+            <div class="right-nav-container">
+                <div class="dropdown-container">
+                    <div class="clear-filter">
+                        <button id="clearFilters" class="btn btn-danger">Clear Filters</button>
+                    </div>
+                    <div class="dropdown-center" style="margin-right: 5px;">
+                        <button class="btn btn-primary dropdown-toggle" id="filterStatus" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter by Status
+                        </button>
+                        <ul class="dropdown-menu" id="statusDropdown">
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">RED</div>
+                                    <div class="status-count status-red-dot"></div>
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">AMBER</div>
+                                    <div class="status-count status-amber-dot"></div>
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">GREEN</div>
+                                    <div class="status-count status-green-dot">
+                                    </div>
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">On-Hold</div>
+                                    <div class="status-count status-on-hold-dot"></div>
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">Completed</div>
+                                    <div class="status-count status-completed-dot"></div>
+                                </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                    <div class="status-name">All</div>
+                                </a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown" style="margin-right: 5px;">
+                        <button class="btn btn-primary dropdown-toggle" id="filterBizSponsor" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter By Biz. Sponsor
+                        </button>
+                        <ul class="dropdown-menu" id="bizSponsorDropdown"></ul>
+                    </div>
+                    <div class="dropdown" style="margin-right: 5px;">
+                        <button class="btn btn-primary dropdown-toggle" id="filterPortfolio" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter By Portfolio
+                        </button>
+                        <ul class="dropdown-menu" id="portfolioDropdown"></ul>
+                    </div>
+                    <div class="dropdown-center" style="margin-right: 5px;">
+                        <button class="btn btn-primary dropdown-toggle" id="filterProjectSize" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter By Project Size
+                        </button>
+                        <ul class="dropdown-menu" id="projectSizeDropdown"></ul>
+                    </div>
+                    <div class="dropdown" style="margin-right: 5px;">
+                        <button class="btn btn-primary dropdown-toggle" id="filterPhase" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter By Phase
+                        </button>
+                        <ul class="dropdown-menu" id="phaseDropdown"></ul>
+                    </div>
+                </div>
+                <form class="d-flex search-bar" role="search" id="form">
+                    <input id="searchInput" class="form-control me-2" type="search" placeholder="search data"
+                        aria-label="Search" autocomplete="off">
+                    <!-- <button id="searchBtn" class="btn btn-primary" type="submit">Search</button> -->
+                </form>
+            </div>
+            <div class="pinned-option-holder" id="pinnedOptions" style="display: none;">
+                <div style="border-right: 5px solid rgba(0, 0, 0, 0.24); padding-right: 1rem">
+                    <button class="btn btn-secondary options" id="generateIdButton" type="button">Generate Unique
+                        Token</button>
+                    <input class="options" type="text" name="uuid" placeholder="Unique Token" id="uuidField"
+                        style="width: 20rem;">
+                    <button class="btn btn-secondary options" id="retrievePinsButton" type="button">Retrieve
+                        Pinned</button>
+                    <button class="btn btn-danger options" id="unpinAllButton" type="button">Unpin All</button>
+                </div>
+                <div style="margin-left: 1rem;">
+                    <span id="tokenMessage">Generate Token Message Here</span>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border card-spinner" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 row-cols-lg-4 row-cols-xl-5 g-2 g-lg-3"
+                id="card-container">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+            <!-- Hidden table to use DataTables functionality -->
+            <table id="data-table" class="display" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Child</th>
+                        <th>Project Name</th>
+                        <th>Business Goal</th>
+                        <th>Portfolio</th>
+                        <!-- <th>Project Type</th> -->
+                        <th>Business Line</th>
+                        <th>Phase</th>
+                        <th>RAG Status</th>
+                        <th>Trend</th>
+                        <th>Risks/Issues</th>
+                        <th>Last Updated</th>
+                        <th>Delivery Org Date</th>
+                        <th>Delivery Baseline</th>
+                        <th>Delivery Forecast</th>
+                        <th>Budget</th>
+                        <th>Project Size</th>
+                        <th>Business Sponsor</th>
+                        <th>IT Initiative Lead</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <!-- Data will be populated here dynamically -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Key</th>
+                        <th>Child</th>
+                        <th>Project Name</th>
+                        <th>Business Goal</th>
+                        <th>Portfolio</th>
+                        <!-- <th>Project Type</th> -->
+                        <th>Business Line</th>
+                        <th>Phase</th>
+                        <th>RAG Status</th>
+                        <th>Trend</th>
+                        <th>Risks/Issues</th>
+                        <th>Last Updated</th>
+                        <th>Delivery Org Date</th>
+                        <th>Delivery Baseline</th>
+                        <th>Delivery Forecast</th>
+                        <th>Budget</th>
+                        <th>Project Size</th>
+                        <th>Business Sponsor</th>
+                        <th>IT Initiative Lead</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header custom-modal-header">
+                    <h2 class="modal-title" id="detailsModalLabel">Modal Title</h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div style="height: 50%; overflow: auto;">
+                        <table id="modal-table" class="display">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Child</th>
+                                    <th>Project Name</th>
+                                    <!-- <th>Business Goal</th> -->
+                                    <th>Portfolio</th>
+                                    <!-- <th>Project Type</th> -->
+                                    <th>Business Line</th>
+                                    <th>Phase</th>
+                                    <th>RAG Status</th>
+                                    <th>Trend</th>
+                                    <!-- <th>Risks/Issues</th> -->
+                                    <th>Last Updated</th>
+                                    <th>Delivery Org Date</th>
+                                    <th>Delivery Baseline</th>
+                                    <th>Delivery Forecast</th>
+                                    <th>Budget</th>
+                                    <th>Project Size</th>
+                                    <th>Business Sponsor</th>
+                                    <th>IT Initiative Lead</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-body-content">
+                                <!-- Data will be populated here dynamically -->
+                            </tbody>
+                            <!-- <tfoot>
+                            <tr>
+                                <th>Key</th>
+                                <th>Child</th>
+                                <th>Project Name</th>
+                                <th>Business Goal</th>
+                                <th>Portfolio</th>
+                                <th>Business Line</th>
+                                <th>Phase</th>
+                                <th>RAG Status</th>
+                                <th>Trend</th>
+                                <th>Risks/Issues</th>
+                                <th>Last Updated</th>
+                                <th>Delivery Org Date</th>
+                                <th>Delivery Baseline</th>
+                                <th>Delivery Forecast</th>
+                                <th>Budget</th>
+                                <th>Project Size</th>
+                                <th>Business Sponsor</th>
+                                <th>IT Initiative Lead</th>
+                            </tr>
+                        </tfoot> -->
+                        </table>
+                    </div>
+                    <div style="
+                        display: flex;
+                        align-content: center;
+                        flex-wrap: wrap;
+                        justify-content: space-between;
+                        align-items: stretch;
+                        height: 50%;
+                    ">
+                        <div style="width: 50%;">
+                            <h4 style="margin-bottom: 2rem;">Business Objective</h4>
+                            <p id="businessObjective"></p>
+                        </div>
+                        <div style="width: 50%;">
+                            <h4 style="margin-bottom: 2rem;">Risk/Issues</h4>
+                            <p id="riskIssues"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Children Modal -->
+    <div class="modal fade" id="childModal" data-bs-keyboard="true" tabindex="-1" aria-labelledby="childModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl" style="width: 80%;">
+            <div class="modal-content">
+                <div class="modal-header custom-modal-header">
+                    <h3 class="modal-title" id="childModalLabel">Child Projects</h3>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table id="child-table" class="display" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Project Name</th>
+                                <th>Business Goal</th>
+                                <th>Portfolio</th>
+                                <th>Business Line</th>
+                                <th>Phase</th>
+                                <th>Status</th>
+                                <th>Commentary/Risk/Issues</th>
+                                <th>Last Updated</th>
+                                <th>Delivery Original Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="child-modal-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="footer bg-body-tertiary text-center text-lg-start sticky-bottom">
+        <div class="text-center p-3 footer-container">
+            <div class="devops-image">
+                <a href="https://devops/" target="_blank"><img class="image"
+                        src="static/images/octopus-devops-infinity.png" title="Created & Maintained by DevOps Team"></a>
+            </div>
+            <label class="legend"><a href="#">Legend</a></lable> | <a target="_blank"
+                    href="https://jira/servicedesk/customer/portal/1/create/2061">Feedback</a> | <label
+                    id="cardCount"></label> | <label>Last Updated: <span id="lastUpdated"></span></label>
+                <div class="legend-container" style="display: none;">
+                    <div class="legend-container-body">
+                        <div class="left-legend-container">
+                            <div class="rag-status">
+                                <h6>RAG Status </h6>
+                                <div>
+                                    <div class="rag-status-cell">
+                                        <p>RED</p>
+                                        <div class="legend-status-red-dot"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>AMBER </p>
+                                        <div class="legend-status-amber-dot"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>GREEN </p>
+                                        <div class="legend-status-green-dot"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>ON-HOLD </p>
+                                        <div class="legend-status-on-hold-dot"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>COMPLETED </p>
+                                        <div class="legend-status-completed-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="trend-icons">
+                                <h6>Project Size (PS)</h6>
+                                <div>
+                                    <div class="rag-status-cell">
+                                        <!-- <p>Small</p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/s-pie-100.png')}}" alt=""> -->
+                                        <p>Small</p>
+                                        <div class="signal-bars">
+                                            <div class="bar bar1 filled"></div>
+                                            <div class="bar bar2"></div>
+                                            <div class="bar bar3"></div>
+                                            <div class="bar bar4"></div>
+                                        </div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <!-- <p>Medium </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/m-pie-100.png')}}" alt=""> -->
+                                        <p>Medium</p>
+                                        <div class="signal-bars">
+                                            <div class="bar bar1 filled"></div>
+                                            <div class="bar bar2 filled"></div>
+                                            <div class="bar bar3"></div>
+                                            <div class="bar bar4"></div>
+                                        </div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <!-- <p>Large </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/l-pie-100.png')}}" alt=""> -->
+                                        <p>Large</p>
+                                        <div class="signal-bars">
+                                            <div class="bar bar1 filled"></div>
+                                            <div class="bar bar2 filled"></div>
+                                            <div class="bar bar3 filled"></div>
+                                            <div class="bar bar4"></div>
+                                        </div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <!-- <p>X-Large </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/xl-pie-100.png')}}" alt=""> -->
+                                        <p>X-Large</p>
+                                        <div class="signal-bars">
+                                            <div class="bar bar1 filled"></div>
+                                            <div class="bar bar2 filled"></div>
+                                            <div class="bar bar3 filled"></div>
+                                            <div class="bar bar4 filled"></div>
+                                        </div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <!-- <p>N/A </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/na-pie-100.png')}}" alt=""> -->
+                                        <p>NA</p>
+                                        <div class="signal-bars">
+                                            <div class="bar bar1"></div>
+                                            <div class="bar bar2"></div>
+                                            <div class="bar bar3"></div>
+                                            <div class="bar bar4"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right-legend-container">
+                            <div class="trend-icons">
+                                <h6>Trend Icons (T)</h6>
+                                <div>
+                                    <div class="rag-status-cell">
+                                        <p>UP </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/icons8-double-up-100.png')}}"
+                                            alt="">
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>MAINTAINED </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/icons8-double-right-100.png')}}"
+                                            alt="">
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>DOWN </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/icons8-double-down-100.png')}}"
+                                            alt="">
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>NA </p> <img class="trend-icon"
+                                            src="{{url_for('static', filename='images/icons8-equal-sign-64.png')}}"
+                                            alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="trend-icons" style="padding-top: 5px;">
+                                <h6>Budget Status (B)</h6>
+                                <div>
+                                    <div class="rag-status-cell">
+                                        <p>RED </p>
+                                        <div class="budget budget-red"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>AMBER </p>
+                                        <div class="budget budget-amber"></div>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>GREEN </p>
+                                        <div class="budget budget-green"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="report-cadence" style="padding-top: 5px;">
+                                <h6>Report Cadence</h6>
+                                <div>
+                                    <div class="rag-status-cell">
+                                        <p>Weekly</p>
+                                        <p>W</p>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>Monthly</p>
+                                        <p>M</p>
+                                    </div>
+                                    <div class="rag-status-cell">
+                                        <p>Fortnightly</p>
+                                        <p>F</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            // debugger;
+            const bodySpinner = document.querySelector('.card-spinner');
+            const groupLinks = document.querySelectorAll('.group-link');
+            const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+            const sizeDropdownButton = document.getElementById('filterProjectSize');
+            const phaseDropdownButton = document.getElementById('filterPhase');
+            const statusDropdownButton = document.getElementById('filterStatus');
+            const portfolioDropdownButton = document.getElementById('filterPortfolio');
+            const bizSponsorDropdownButton = document.getElementById('filterBizSponsor');
+            const statusDropdownMenu = document.querySelectorAll('#statusDropdown .dropdown-item');
+            const tableToggleBtn = document.querySelector('.toggle-card-table');
+            const cardCount = document.getElementById('cardCount');
+            const clearFiltersButton = document.getElementById('clearFilters');
+            const legend = document.querySelector('.legend');
+            const legendContainer = document.querySelector('.legend-container');
+            const pinnedOptions = document.getElementById('pinnedOptions');
+            const generateIdButton = document.getElementById('generateIdButton');
+            const retrievePinsButton = document.getElementById('retrievePinsButton');
+            const unpinAllButton = document.getElementById('unpinAllButton');
+            const UIDField = document.getElementById('uuidField');
+
+            console.log(tableToggleBtn);
+
+            const jiraURL = "https://jira-dev/browse/";
+            let jsonData = [];
+            let filteredData = [];
+            let selectedTab = 'all';
+            let selectedProjectSize = 'all';
+            let selectedPhase = 'all';
+            let selectedStatus = 'all';
+            let selectedPortfolio = 'all';
+            let selectedBizSponsor = 'all';
+            let selectedProductName = '';
+            let modalIndex = 0;
+            let datatableVisibleAV = false;
+            let datatableVisible = true;
+            let totalCount = 0;
+            let filteredCount = 0;
+            let storedPinnedEnvData = {}; // To store fetched pinned environment data
+            let pinnedEnvironments = [];
+            let showUpdates = false;
+            // let grouplinkClick = false;
+            // let timestamp = '';
+
+            generateIdButton.addEventListener('click', async function () {
+                try {
+                    const response = await fetch(`/generate_unique_id`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    console.log(data.token);
+                    localStorage.setItem('uid', data.token);
+                    UIDField.setAttribute('value', data.token);
+
+                    //Create a file and trigger download
+                    const blob = new Blob([data.token], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'uid.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Failed to generate unique id: ', error);
+                }
+            });
+
+            retrievePinsButton.addEventListener('click', async function () {
+                try {
+                    const uid = UIDField.value;
+                    console.log(uid);
+
+                    if (!uid) {
+                        throw new Error('UID is required');
+                    }
+
+                    localStorage.setItem('uid', uid);
+
+                    const response = await fetch(`/retrieve_pins?uid=${uid}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    console.log('Retrieved pinned environments:', data);
+
+                    // Handle the retrieved data as needed
+                    // Example: store the data in a variable and update the UI
+                    pinnedEnvironments = data.pins;
+                    console.log('Updated pinned environments:', storedPinnedEnvData);
+                    applyfilters();
+                } catch (error) {
+                    console.error('Failed to retrieve pinned environments:', error);
+                }
+            });
+
+            unpinAllButton.addEventListener('click', function () {
+                clearPinnedEnvironments();
+            })
+
+            function populateUidField() {
+                if (localStorage.getItem('uid') !== null) {
+                    UIDField.setAttribute('value', localStorage.getItem('uid'));
+                }
+                else {
+                    UIDField.setAttribute('value', 'No User ID Found');
+                }
+            }
+
+            populateUidField();
+
+            // Add event listener for the legend click
+            legend.addEventListener('click', function () {
+                console.log("inside legend");
+                // Toggle visibility of legendContainer
+                if (legendContainer.style.display == 'none' || legendContainer.style.display === '') {
+                    legendContainer.style.display = 'block';
+                } else {
+                    legendContainer.style.display = 'none';
+                }
+            });
+
+            // Add event listener for clicks outside the legendContainer
+            document.addEventListener('click', function (event) {
+                // Check if the clicked element is not the legend or inside the legendContainer
+                if (!legend.contains(event.target) && !legendContainer.contains(event.target)) {
+                    // Close the legendContainer if it is currently open
+                    if (legendContainer.style.display === 'block') {
+                        legendContainer.style.display = 'none';
+                    }
+                }
+            });
+
+
+            function toggleTableView(option) {
+                // debugger;
+                const cardContainer = document.getElementById('card-container');
+                const dataTable = document.getElementById('data-table');
+                const dataTableWrapper = document.getElementById('data-table_wrapper');
+                const dropdownContainer = document.querySelector('.dropdown-container');
+                const toggleIcon = document.querySelector('.toggle');
+
+                // const searchBars = document.querySelectorAll('.dataTables')
+                console.log('inside tableToggleBtn');
+                console.log(datatableVisible);
+                if (option == 'calender') {
+                    console.log('calender is selected');
+                    if (datatableVisible === false) {
+                        cardContainer.style.display = 'flex'; // Show the card container (or 'block' depending on layout needs)
+                        dataTable.style.display = 'none'; // Hide the data table
+                        dataTableWrapper.style.display = 'none'; // Hide the data table
+                        // dropdownContainer.style.display = '';
+                        toggleIcon.src = './static/images/table-view.png';
+                        // toggleIcon.innerText = 'Table-View'
+                        datatableVisible = true;
+                        datatableVisibleAV = false;
+                    } else if (datatableVisible === true) {
+                        cardContainer.style.display = 'none'; // Hide the card container
+                        dataTable.style.display = 'table'; // Show the data table
+                        dataTableWrapper.style.display = 'block';
+                        // dropdownContainer.style.display = 'none';
+                        toggleIcon.src = './static/images/icons8-thumbnails-1000.png';
+                        // toggleIcon.innerText = 'Grid-View';
+                        datatableVisible = false;
+                        datatableVisibleAV = true;
+                        if (document.getElementsByClassName("dataTables_filter").length == 2) {
+                            document.getElementsByClassName("dataTables_filter")[1].remove();
+                        }
+                    }
+                } else if (option == 'tab') {
+                    console.log('tab is selected');
+                    if (datatableVisibleAV === false) {
+                        cardContainer.style.display = 'flex'; // Show the card container (or 'block' depending on layout needs)
+                        dataTable.style.display = 'none'; // Hide the data table
+                        dataTableWrapper.style.display = 'none'; // Hide the data table
+                        // dropdownContainer.style.display = '';
+                    } else if (datatableVisibleAV === true) {
+                        cardContainer.style.display = 'none'; // Hide the card container
+                        dataTable.style.display = 'table'; // Show the data table
+                        dataTableWrapper.style.display = 'block';
+                        // dropdownContainer.style.display = 'none';
+                        if (document.getElementsByClassName("dataTables_filter").length == 2) {
+                            document.getElementsByClassName("dataTables_filter")[1].remove();
+                        }
+                    }
+                    // Select the input field within the data-table_filter div
+                    const filterInput = document.querySelector('#data-table_filter input');
+
+                    // Set a new value for the input field
+                    filterInput.value = '';
+                }
+            }
+
+            tableToggleBtn.addEventListener('click', function () {
+                // grouplinkClick = false;
+                toggleTableView('calender');
+            });
+
+            function addActiveClassToGroupLinks() {
+                groupLinks.forEach(link => {
+                    link.addEventListener('click', function () {
+                        // debugger;
+                        // grouplinkClick = true;
+                        console.log('inside groupLinks')
+                        groupLinks.forEach(link => link.classList.remove('active'));
+                        this.classList.add('active');
+                        selectedTab = this.getAttribute('data-db-type').toLowerCase();
+                        applyfilters();
+                        toggleTableView('tab');
+                        // const datatableFilter = document.getElementById('data-table_filter');
+                        // datatableFilter.innerText = '';
+                    });
+                });
+            }
+
+            addActiveClassToGroupLinks();
+
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    // debugger;
+                    selectedStatus = this.querySelector('.status-name').innerText.toLowerCase();
+                    console.log(selectedStatus);
+                    applyfilters();
+                })
+            })
+
+            function hideCardSpinner() {
+                bodySpinner.style.display = 'none';
+            }
+
+            async function fetchPinnedEnvironments() {
+                const uid = localStorage.getItem('uid');
+                try {
+                    const response = await fetch(`/get_pinned_data?uid=${uid}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not successful');
+                    }
+                    storedPinnedData = await response.json();
+                    console.log('Pinned Environments: ', storedPinnedData);
+
+                    // let hostname = storedPinnedEnvData["hostname"];
+                    // pinnedEnvironments = storedPinnedEnvData[hostname];
+                    pinnedEnvironments = storedPinnedData["pins"];
+                    console.log('Pinned Environments Array: ', pinnedEnvironments);
+                } catch (error) {
+                    console.log('Failed to fetch data: ', error);
+                }
+            }
+
+            async function fetchTimeStamp() {
+                try {
+                    const response = await fetch('/get_timestamp');
+                    if (!response.ok) {
+                        throw new Error('NETWORK RESPONSE FAILED: Time stamp not found');
+                    }
+                    const data = await response.json();
+                    const lastupdated = document.getElementById('lastUpdated');
+                    lastupdated.textContent = data.timestamp;
+                } catch (error) {
+                    console.error('Failed to fetch timestamp', error);
+                }
+            }
+
+            // Fetch the data
+            async function fetchData() {
+                try {
+                    const response = await fetch('/get_new_data');
+                    if (!response.ok) {
+                        throw new Error('NETWORK RESPONSE FAILED: Data could not be retrieved');
+                    }
+                    const data = await response.json();
+                    jsonData = Object.values(data.data); // Convert object to array
+                    totalCount = jsonData.length;
+                    // Dynamically check for null or undefined values for each object
+                    jsonData.forEach(product => {
+                        Object.keys(product).forEach(key => {
+                            const value = product[key];
+                            if (
+                                value === null ||                   // Check for null
+                                value === undefined ||              // Check for undefined
+                                value === '' ||                     // Check for empty string
+                                (Array.isArray(value) && value.length === 0) ||  // Check for empty array
+                                (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) ||  // Check for empty object
+                                Number.isNaN(value)                 // Check for NaN
+                            ) {
+                                product[key] = 'N/A';  // Replace empty values with 'N/A' or another fallback value
+                            }
+                        });
+                    });
+
+                    console.log(jsonData);
+                    await fetchPinnedEnvironments();
+                    // populateBudgetDropdown();
+                    populateBizSponsorDropdown();
+                    populatePhaseDropdown();
+                    populateprojectSizeDropdown();
+                    populateProtfolioDropdown();
+                    applyfilters();
+                } catch (error) {
+                    console.error('Failed to fetch data', error);
+                } finally {
+                    hideCardSpinner();
+                }
+            }
+
+            async function initializePinIcons() {
+                const pinIcons = document.querySelectorAll('.pin');
+                pinIcons.forEach(icon => {
+                    icon.addEventListener('click', async function (event) {
+                        if (localStorage.getItem("uid") != null) {
+                            event.preventDefault(); // Prevent default behavior of the click event
+                            event.stopPropagation(); // Stop event propagation to prevent further processing
+                            const pinned = this.classList.toggle('pinned');
+                            this.src = pinned ? 'static/images/icons8-pin-filled-100.png' : 'static/images/icons8-pin-100.png';
+                            const envKey = this.closest('.icon-container').querySelector('.key-container').innerText;
+                            if (pinned) {
+                                pinnedEnvironments.push(envKey);
+                            } else {
+                                pinnedEnvironments = pinnedEnvironments.filter(key => key !== envKey);
+                            }
+                            // initializeTableAndCards();
+
+                            const uid = localStorage.getItem("uid");
+
+                            await fetch(`/update_pinned_data?uid=${uid}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ pins: pinnedEnvironments })
+                            })
+                                .then(response => response.json())
+                                .then(data => { })
+                                .catch((error) => {
+                                    console.error('Error: ' + error.message);
+                                });
+                        } else {
+                            const tokenMessage = document.getElememtById('tokenMessage');
+                            selectedTab = 'pinned';
+                            addActiveClassToGroupLinks();
+                            tokenMessage.innerText = "Generate Unique ID before Pinning.";
+                            // initializeTableAndCards();
+                        }
+                    })
+                })
+            }
+
+            async function clearPinnedEnvironments() {
+                if (localStorage.getItem("uid") != null) {
+                    const uid = localStorage.getItem("uid");
+
+                    try {
+                        const response = await fetch(`/update_pinned_data?uid=${uid}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ pins: [] })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not successful');
+                        }
+
+                        const data = await response.json();
+                        console.log('Pinned environments cleared: ', data);
+
+                        pinnedEnvironments = [];
+                        applyfilters();
+                    } catch (error) {
+                        console.error('Failed to clear pinned environments: ', error);
+                    }
+                } else {
+                    const tokenMessage = document.getElementById('tokenMessage');
+                    selectedTab = 'pinned';
+                    addActiveClassToGroupLinks();
+                    tokenMessage.innerText = "Unique ID required.";
+                    applyfilters();
+                }
+            }
+
+            function populateBizSponsorDropdown() {
+                const sponsors = new Set();
+                Object.values(jsonData).forEach(product => {
+                    sponsors.add(product.buisness_sponsor);
+                })
+                const sponsorsDropdown = document.getElementById('bizSponsorDropdown');
+                sponsorsDropdown.innerHTML = '';
+                const clearFilterItem = document.createElement('li');
+                clearFilterItem.innerHTML = `<a class="dropdown-item" href="#" style="color: red">Clear Filter</a>`;
+                clearFilterItem.addEventListener('click', function () {
+                    selectedBizSponsor = 'all';
+                    bizSponsorDropdownButton.innerText = 'Filter by Biz Sponsor';
+                    applyfilters();
+                });
+                sponsorsDropdown.appendChild(clearFilterItem);
+                sponsors.forEach(sponsor => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<a class="dropdown-item" href="#">${sponsor}</a>`;
+                    listItem.addEventListener('click', function () {
+                        selectedBizSponsor = sponsor;
+                        bizSponsorDropdownButton.innerText = selectedBizSponsor;
+                        applyfilters();
+                    });
+                    sponsorsDropdown.appendChild(listItem);
+                });
+            }
+
+            function populatePhaseDropdown() {
+                const phases = new Set();
+                Object.values(jsonData).forEach(product => {
+                    phases.add(product.phase);
+                })
+                const phaseDropdown = document.getElementById('phaseDropdown');
+                phaseDropdown.innerHTML = '';
+                const clearFilterItem = document.createElement('li');
+                clearFilterItem.innerHTML = `<a class="dropdown-item" href="#" style="color: red">Clear Filter</a>`;
+                clearFilterItem.addEventListener('click', function () {
+                    selectedPhase = 'all';
+                    phaseDropdownButton.innerText = 'Filter by Phase';
+                    applyfilters();
+                });
+                phaseDropdown.appendChild(clearFilterItem);
+                phases.forEach(phaseName => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<a class="dropdown-item" href="#">${phaseName}</a>`;
+                    listItem.addEventListener('click', function () {
+                        selectedPhase = phaseName;
+                        phaseDropdownButton.innerText = selectedPhase;
+                        applyfilters();
+                    });
+                    phaseDropdown.appendChild(listItem);
+                })
+            }
+
+            function populateprojectSizeDropdown() {
+                const projectSizes = new Set();
+                Object.values(jsonData).forEach(product => {
+                    projectSizes.add(product.project_size);
+                })
+                const projectSizeDropdown = document.getElementById('projectSizeDropdown');
+                projectSizeDropdown.innerHTML = '';
+                const clearFilterItem = document.createElement('li');
+                clearFilterItem.innerHTML = `<a class="dropdown-item" href="#" style="color: red">Clear Filter</a>`;
+                clearFilterItem.addEventListener('click', function () {
+                    selectedProjectSize = 'all';
+                    sizeDropdownButton.innerText = 'Filter by Project Size';
+                    applyfilters();
+                });
+                projectSizeDropdown.appendChild(clearFilterItem);
+                projectSizes.forEach(projectSize => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<a class="dropdown-item" href="#">${projectSize}</a>`;
+                    listItem.addEventListener('click', function () {
+                        selectedProjectSize = projectSize;
+                        sizeDropdownButton.innerText = selectedProjectSize;
+                        applyfilters();
+                    });
+                    projectSizeDropdown.appendChild(listItem);
+                })
+            }
+
+            function populateProtfolioDropdown() {
+                const portfolios = new Set();
+                Object.values(jsonData).forEach(product => {
+                    portfolios.add(product.Portfolio);
+                })
+                const portfolioDropdown = document.getElementById('portfolioDropdown');
+                portfolioDropdown.innerHTML = '';
+                const clearFilterItem = document.createElement('li');
+                clearFilterItem.innerHTML = `<a class="dropdown-item" href="#" style="color: red">Clear Filter</a>`;
+                clearFilterItem.addEventListener('click', function () {
+                    selectedPortfolio = 'all';
+                    portfolioDropdownButton.innerText = 'Filter by Portfolio';
+                    applyfilters();
+                });
+                portfolioDropdown.appendChild(clearFilterItem);
+                portfolios.forEach(portfolio => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<a class="dropdown-item" href="#">${portfolio}</a>`;
+                    listItem.addEventListener('click', function () {
+                        selectedPortfolio = portfolio;
+                        portfolioDropdownButton.innerHTML = selectedPortfolio;
+                        applyfilters();
+                    });
+                    portfolioDropdown.appendChild(listItem)
+                })
+            }
+
+            statusDropdownMenu.forEach(item => {
+                item.addEventListener('click', function (event) {
+                    let selectedText = this.querySelector('.status-name').innerText;
+                    if (selectedText != 'All') {
+                        statusDropdownButton.innerText = selectedText;
+                    } else {
+                        statusDropdownButton.innerText = 'Filter by Status';
+                    }
+                    console.log(selectedText);
+                    selectedStatus = selectedText;
+                    applyfilters();
+                })
+            });
+
+
+            // Function to clear all filters
+            function clearAllFilters() {
+                selectedProjectSize = 'all';
+                selectedPhase = 'all';
+                selectedStatus = 'all';
+                selectedPortfolio = 'all';
+                selectedBizSponsor = 'all';
+
+                // Reset dropdown button texts
+                sizeDropdownButton.innerText = 'Filter By Project Size';
+                phaseDropdownButton.innerText = 'Filter By Phase';
+                statusDropdownButton.innerText = 'Filter By Status';
+                portfolioDropdownButton.innerText = 'Filter By Portfolio';
+                bizSponsorDropdownButton.innerText = 'Filter By Biz Sponsor';
+
+                // Apply filters after clearing
+                applyfilters();
+            }
+
+            clearFiltersButton.addEventListener('click', function () {
+                clearAllFilters();
+            });
+
+            function applyfilters() {
+                console.log(jsonData);
+                let data = [];
+                let phaseFilterdData;
+                let projectSizeFilterdData;
+                let portfolioFilterdData;
+                let statusFilterData;
+                console.log(selectedTab);
+                if (selectedTab === 'all') {
+                    data = Object.values(jsonData);
+                    pinnedOptions.style.display = 'none';
+                } else if (selectedTab === 'weekly') {
+                    data = Object.values(jsonData).filter(env => env.report_cadence === "Weekly");
+                    pinnedOptions.style.display = 'none';
+                } else if (selectedTab === 'monthly') {
+                    data = Object.values(jsonData).filter(env => env.report_cadence === "Monthly");
+                    pinnedOptions.style.display = 'none';
+                } else if (selectedTab === 'fortnightly') {
+                    data = Object.values(jsonData).filter(env => env.report_cadence === "Fortnightly");
+                    pinnedOptions.style.display = 'none';
+                } else if (selectedTab === 'pinned') {
+                    pinnedOptions.style.display = 'flex';
+                    data = Object.values(jsonData).filter(env => pinnedEnvironments.includes(env.key));
+                }
+
+                if (selectedPhase !== 'all') {
+                    phaseFilterdData = data.filter(env => env.phase === selectedPhase);
+                } else {
+                    phaseFilterdData = data;
+                }
+
+                if (selectedProjectSize !== 'all') {
+                    projectSizeFilterdData = phaseFilterdData.filter(env => env.project_size === selectedProjectSize);
+                } else {
+                    projectSizeFilterdData = phaseFilterdData;
+                }
+
+                console.log(selectedPortfolio);
+                if (selectedPortfolio !== 'all') {
+                    portfolioFilterdData = projectSizeFilterdData.filter(env => env.Portfolio === selectedPortfolio);
+                } else {
+                    portfolioFilterdData = projectSizeFilterdData;
+                }
+
+                console.log(selectedStatus);
+                if (selectedStatus.toLowerCase() !== 'all') {
+                    statusFilterData = portfolioFilterdData.filter(env => env.rag_status.toLowerCase() === selectedStatus.toLowerCase());
+                } else {
+                    statusFilterData = portfolioFilterdData;
+                }
+
+                if (selectedBizSponsor !== 'all') {
+                    filteredData = statusFilterData.filter(env => env.buisness_sponsor.toLowerCase() === selectedBizSponsor.toLowerCase());
+                } else {
+                    filteredData = statusFilterData;
+                }
+
+                filteredCount = filteredData.length;
+
+                console.log(totalCount + ' , ' + filteredCount);
+
+                cardCount.innerHTML = `Showing ${filteredCount} of ${totalCount}`;
+
+                initializeTableAndCards();
+                console.log('HELLO WORLD!!!');
+                initializeExpandIcons();
+                initializeChildIcons();
+                initializePinIcons();
+                if (datatableVisibleAV === true) {
+                    document.getElementById('data-table_wrapper').style.display = 'block';
+                }
+            };
+
+            function initializeChildIcons() {
+                // debugger;
+                const childIcons = document.querySelectorAll('.child-icon');
+                childIcons.forEach(icon => {
+                    icon.addEventListener('click', function () {
+                        console.log('child icon clicked');
+                        const cardElement = this.closest('.card');
+                        if (cardElement) {
+                            const productNameElement = cardElement.querySelector('.build-number .owner-name');
+                            if (productNameElement) {
+                                const productName = productNameElement.getAttribute('data-bs-original-title');
+                                console.log('selected product: ' + productName);
+                                selectedProductName = productName;
+                                initializeChildModal();
+                            } else {
+                                console.log('No owner-name found in the card.');
+                            }
+                        } else {
+                            console.log('No card element found.');
+                        }
+                    })
+                })
+            }
+
+            function initializeExpandIcons() {
+                const expandIcons = document.querySelectorAll('.expand');
+                expandIcons.forEach(icon => {
+                    icon.addEventListener('click', function () {
+                        // Find the closest card and within it, find the .owner-name with the title attribute
+                        const cardElement = this.closest('.card');
+                        if (cardElement) {
+                            const productNameElement = cardElement.querySelector('.build-number .owner-name');
+                            if (productNameElement) {
+                                const productName = productNameElement.getAttribute('data-bs-original-title');
+                                console.log('selected product: ' + productName);
+                                selectedProductName = productName;
+                                initializeModal();
+                            } else {
+                                console.log('No owner-name found in the card.');
+                            }
+                        } else {
+                            console.log('No card element found.');
+                        }
+                    });
+                });
+            }
+
+            function initializeChildModal() {
+                const currentEnvironment = filteredData.find(env => env["Project name"] === selectedProductName); // Adjust if necessary
+                console.log("current Environment: ", currentEnvironment);
+
+                if (currentEnvironment) {
+                    const modalHeaderClass = currentEnvironment.rag_status.toLowerCase() === "green" ? 'green' :
+                        currentEnvironment.rag_status.toLowerCase() === "amber" ? 'amber' :
+                            currentEnvironment.rag_status.toLowerCase() === "red" ? 'red' :
+                                currentEnvironment.rag_status.toLowerCase() === "on-hold" ? 'gray' : 'blue';
+
+                    document.getElementById('childModalLabel').innerText = selectedProductName;
+                    const modalHeader = document.querySelector('#childModal .modal-header');
+                    if (modalHeader) {
+                        modalHeader.className = `modal-header status-${modalHeaderClass} custom-modal-header`;
+                    }
+                } else {
+                    console.log('No environment found for the selected product.');
+                }
+            }
+
+            function initializeModal() {
+                // console.log("filtered Data = ", JSON.stringify(filteredData, null, 2)); // Print filteredData properly
+
+                const currentEnvironment = filteredData.find(env => env["Project name"] === selectedProductName); // Adjust if necessary
+                const product = jsonData.find(item => item["Project name"] === selectedProductName);
+                console.log("current Environment: ", currentEnvironment);
+
+                if (currentEnvironment) {
+                    const modalHeaderClass = currentEnvironment.rag_status.toLowerCase() === "green" ? 'green' :
+                        currentEnvironment.rag_status.toLowerCase() === "amber" ? 'amber' :
+                            currentEnvironment.rag_status.toLowerCase() === "red" ? 'red' :
+                                currentEnvironment.rag_status.toLowerCase() === "on-hold" ? 'gray' : 'blue';
+
+                    document.getElementById('detailsModalLabel').innerText = selectedProductName;
+                    const modalHeader = document.querySelector('#detailsModal .modal-header');
+                    if (modalHeader) {
+                        modalHeader.className = `modal-header status-${modalHeaderClass} custom-modal-header`;
+                    }
+                    const businessDetails = document.querySelector('#detailsModal #businessObjective');
+                    const riskIssues = document.querySelector('#detailsModal #riskIssues');
+                    businessDetails.innerText = product.business_goal;
+                    riskIssues.innerText = product.commentary_risks_issues;
+                } else {
+                    console.log('No environment found for the selected product.');
+                }
+            }
+
+            function updateSelectedFilter() {
+                const selectedFilterDiv = document.querySelector('.selected-filter');
+                if (selectedStatus !== 'all') {
+                    console.log(selectedStatus);
+                    const filterClass = `filter-${selectedStatus.replaceAll(' ', '-')}`;
+                    selectedFilterDiv.className = `selected-filter ${filterClass}`;
+                    selectedFilterDiv.style.display = 'flex';
+                } else {
+                    selectedFilterDiv.style.display = 'none';
+                }
+            }
+
+            function populateChildTable() {
+                console.log(jsonData);
+
+                // Find the project that matches the selectedProductName
+                const product = jsonData.find(item => item["Project name"] === selectedProductName);
+                console.log(product);
+
+                if (!product) {
+                    console.log("No project found with the name: " + selectedProductName);
+                    return;
+                }
+
+                const modalTableBody = $('#child-modal-body');
+                modalTableBody.empty(); // Clear existing rows
+
+                console.log("inside modal table for project: " + selectedProductName);
+                console.log('details: ', product);
+
+                // Check if the product has children
+                if (product.children != 'N/A') {
+                    product.children.forEach(child => {
+                        const childRow = `
+                            <tr>
+                                <td><a style="color:#000; text-decoration:none;" href="${jiraURL + child["key"] || ''}" target="_blank">${child["key"] || 'N/A'}</a></td>
+                                <td>${child.project_name}</td>
+                                <td>${child.business_goal}</td>
+                                <td>${child.portfolio}</td>
+                                <td>${child.business_line}</td>
+                                <td>${child.phase}</td>
+                                <td>${child.rag_status}</td>
+                                <td>${child.commentary_risks_issues}</td>
+                                <td>${child.last_updated}</td>
+                                <td>${child.delivery_org_date}</td>
+                            </tr>
+                        `;
+                        modalTableBody.append(childRow);
+                    });
+                } else {
+                    // Optionally add a row indicating there are no children
+                    const noChildrenRow = `
+                        <tr>
+                            <td colspan="2">No children available for this project.</td>
+                        </tr>
+                    `;
+                    modalTableBody.append(noChildrenRow);
+                }
+
+                // Initialize the DataTable inside the modal with sorting, searching, and pagination
+                $('#child-table').DataTable({
+                    paging: false,       // Disable pagination
+                    searching: false,    // Disable search/filtering
+                    ordering: false,     // Disable column sorting
+                    info: false,         // Disable table information display
+                    lengthChange: false, // Disable changing number of rows displayed
+                    order: [[0, 'asc']], // Default sorting on the first column (index 0)
+                    columnDefs: [
+                        { targets: '_all', orderable: false }, // Make all columns unorderable
+                    ]
+                });
+            }
+
+
+            function populateModalTable() {
+                console.log(jsonData);
+
+                // Find the project that matches the selectedProductName
+                const product = jsonData.find(item => item["Project name"] === selectedProductName);
+                console.log(product);
+
+                if (!product) {
+                    console.log("No project found with the name: " + selectedProductName);
+                    return;
+                }
+
+                const modalTableBody = $('#modal-body-content');
+                modalTableBody.empty(); // Clear existing rows
+
+                console.log("Inside modal table for project: " + selectedProductName);
+                console.log('Details: ', product);
+
+                // Initialize the DataTable inside the modal
+                const modalTable = $('#modal-table').DataTable({
+                    dom: 'Bftip',
+                    "autoWidth": false, // might need this
+                    language: {
+                        searchPlaceholder: 'Search data'
+                    },
+                    buttons: [
+                        'copy', 'excel', 'pdf'
+                    ],
+                    destroy: true, // Ensure table is recreated
+                    data: [product],  // Pass in the selected product data in an array
+                    columns: [
+                        {
+                            data: function (row) {
+                                return `<a href="${jiraURL + row.key}">${row.key}</a>`;
+                            },
+                            title: "Key"
+                        },
+                        {
+                            className: 'details-control',  // This adds the expandable control
+                            orderable: false,
+                            data: null,
+                            defaultContent: ''
+                        },
+                        { data: "Project name", title: "Project Name", width: "100%" },
+                        { data: "Portfolio", title: "Portfolio" },
+                        // { data: "project_type", title: "Project Type" },
+                        { data: "business_line", title: "Business Line" },
+                        { data: "phase", title: "Phase" },
+                        {
+                            data: "rag_status", title: "Status",
+                            createdCell: function (cell, cellData) {
+                                const ragStatus = cellData ? cellData.toLowerCase() : '';
+                                switch (ragStatus.toLowerCase()) {
+                                    case 'green':
+                                        $(cell).css('background-color', '#00704A').css('color', '#fff');
+                                        break;
+                                    case 'red':
+                                        $(cell).css('background-color', '#F40009').css('color', '#fff');
+                                        break;
+                                    case 'amber':
+                                        $(cell).css('background-color', '#FF671F').css('color', '#fff');
+                                        break;
+                                    case 'on-hold':
+                                        $(cell).css('background-color', '#717073').css('color', '#fff');
+                                        break;
+                                    case 'completed':
+                                        $(cell).css('background-color', '#004B93').css('color', '#fff');
+                                        break;
+                                    default:
+                                        $(cell).css('background-color', '');
+                                        break;
+                                }
+                            }
+                        },
+                        {
+                            data: "trend.trend",
+                            title: "Trend",
+                            createdCell: function (cell, cellData) {
+                                let trend = cellData ? cellData.toLowerCase() : '';
+                                switch (trend) {
+                                    case 'up':
+                                        $(cell).css('background-color', '#00704A').css('color', '#fff').text('IMPROVE');
+                                        break;
+                                    case 'down':
+                                        $(cell).css('background-color', '#F40009').css('color', '#fff').text('DECLINE');
+                                        break;
+                                    case 'maintain':
+                                        $(cell).css('background-color', '#004B93').css('color', '#fff').text('SUSTAIN');
+                                        break;
+                                    default:
+                                        $(cell).css('background-color', '').text('');
+                                        break;
+                                }
+                            }
+                        },
+                        { data: "last_updated", title: "Updated On" },
+                        { data: "delivery_original", title: "Delivery Date Original" },
+                        { data: "delivery_baseline", title: "Delivery Date Baseline" },
+                        { data: "delivery_forecast", title: "Delivery Date Forecast" },
+                        { data: "budget", title: "Budget" },
+                        { data: "project_size", title: "Project Size" },
+                        { data: "buisness_sponsor", title: "Business Sponsor" },
+                        { data: "it_initiative_lead", title: "Initiative Lead" },
+                    ],
+                    createdRow: function (row, data, dataIndex) {
+
+                        // Remove 'details-control' class if no child data or if it's "N/A"
+                        if (!data.children || data.children === 'N/A' || data.children.length === 0) {
+                            console.log('No child data');
+                            $(row).find('td.details-control').removeClass('details-control');
+                        }
+                    }
+                });
+
+                // Add event listener for 'details-control' to show/hide child data
+                $('#modal-table tbody').on('click', 'td.details-control', function () {
+                    const tr = $(this).closest('tr');
+                    const row = modalTable.row(tr);
+
+                    // Log the row to check if it has data
+                    console.log('Row:', row);
+
+                    // Ensure the row exists and has data
+                    if (!row.data()) {
+                        console.error('Row not found or has no data');
+                        return; // Exit if there's no data
+                    }
+
+                    const rowData = row.data();
+                    console.log('Row Data:', rowData); // Log the row data
+
+                    if (row.child.isShown()) {
+                        // If the row is already open, close it
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    } else {
+                        // Open the row to show child data as a subtable
+                        const childData = rowData.children || []; // Use a fallback to prevent errors
+
+                        // Create the subtable HTML
+                        let subTableHtml = '<table class="sub-table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+                        subTableHtml += `
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Project Name</th>
+                                    <th>Business Goal</th>
+                                    <th>Portfolio</th>
+                                    <th>Business Line</th>
+                                    <th>Phase</th>
+                                    <th>Status</th>
+                                    <th>Commentary/Risk/Issues</th>
+                                    <th>Last Updated</th>
+                                    <th>Delivery Original Date</th>                                
+                                </tr>
+                            </thead>
+                        <tbody>`;
+
+                        if (childData.length > 0) {
+                            childData.forEach(child => {
+                                subTableHtml += `<tr>
+                                    <td><a href="${jiraURL + child.key || ''}" target="_blank">${child.key || 'N/A'}</a></td>
+                                    <td>${child.project_name}</td>
+                                    <td>${child.business_goal}</td>
+                                    <td>${child.portfolio}</td>
+                                    <td>${child.business_line}</td>
+                                    <td>${child.phase}</td>
+                                    <td>${child.rag_status}</td>
+                                    <td>${child.commentary_risks_issues}</td>
+                                    <td>${child.last_updated}</td>
+                                    <td>${child.delivery_org_date}</td>                                   
+                                </tr>`;
+                            });
+                        } else {
+                            subTableHtml += '<tr><td colspan="2">No child data available</td></tr>';
+                        }
+
+                        subTableHtml += '</tbody></table>';
+
+                        // Show the subtable in the row
+                        row.child(subTableHtml).show();
+                        tr.addClass('shown');
+                    }
+                });
+            }
+
+            // Initialize DataTable and populate cards
+            function initializeTableAndCards() {
+                // debugger
+                console.log(jsonData);
+
+                const table = $('#data-table').DataTable({
+                    dom: 'Bftip',
+                    // "scrollX": true,
+                    lengthMenu: [10, 25, 50, 75, 100],
+                    pageLength: 100,
+                    "autoWidth": false, // might need this
+                    "columns": [
+                        { "width": "100%" },
+                        null, // automatically calculates
+                        null  // remaining width
+                    ],
+                    fixedHeader: {
+                        header: true,
+                        footer: true
+                    },
+                    language: {
+                        searchPlaceholder: 'Search data'
+                    },
+                    buttons: [
+                        'copy', 'excel', 'pdf'
+                    ],
+                    "data": filteredData,  // Your JSON data
+                    destroy: true,
+                    order: [[4, 'asc']],
+                    columns: [
+                        {
+                            data: function (row) {
+                                return `<a href="${jiraURL + row.key}" target="_blank">${row.key}</a>`;
+                            },
+                            title: "Key"
+                        },
+                        {
+                            className: 'details-control',  // This adds the expandable control
+                            orderable: false,
+                            data: null,
+                            defaultContent: ''
+                        },
+                        { data: "Project name", title: "Project Name" },
+                        { data: "business_goal", title: "Business Goal" },
+                        {
+                            data: "Portfolio",
+                            title: "Portfolio",
+                            createdCell: function (cell, cellData, rowData) {
+                                // Apply yellow background if the row's commentary_warning is true
+                                if (rowData.trend && rowData.trend.commentary_warning === true) {
+                                    $(cell).css('background-color', 'yellow');
+                                }
+                            }
+                        },
+                        // { data: "project_type", title: "Project Type" },
+                        { data: "business_line", title: "Business Line" },
+                        { data: "phase", title: "Phase" },
+                        {
+                            data: "rag_status", title: "Status",
+                            createdCell: function (cell, cellData) {
+                                const ragStatus = cellData ? cellData.toLowerCase() : '';
+                                switch (ragStatus.toLowerCase()) {
+                                    case 'green':
+                                        $(cell).css('background-color', '#00704A').css('color', '#fff');
+                                        break;
+                                    case 'red':
+                                        $(cell).css('background-color', '#F40009').css('color', '#fff');
+                                        break;
+                                    case 'amber':
+                                        $(cell).css('background-color', '#FF671F').css('color', '#fff');
+                                        break;
+                                    case 'on-hold':
+                                        $(cell).css('background-color', '#717073').css('color', '#fff');
+                                        break;
+                                    case 'completed':
+                                        $(cell).css('background-color', '#004B93').css('color', '#fff');
+                                        break;
+                                    default:
+                                        $(cell).css('background-color', '');
+                                        break;
+                                }
+                            }
+                        },
+                        {
+                            data: "trend.trend",
+                            title: "Trend",
+                            createdCell: function (cell, cellData) {
+                                let trend = cellData ? cellData.toLowerCase() : '';
+                                switch (trend) {
+                                    case 'up':
+                                        $(cell).css('background-color', '#00704A').css('color', '#fff').text('IMPROVE');
+                                        break;
+                                    case 'down':
+                                        $(cell).css('background-color', '#F40009').css('color', '#fff').text('DECLINE');
+                                        break;
+                                    case 'maintain':
+                                        $(cell).css('background-color', '#004B93').css('color', '#fff').text('SUSTAIN');
+                                        break;
+                                    default:
+                                        $(cell).css('background-color', '').text('');
+                                        break;
+                                }
+                            }
+                        },
+                        { data: "commentary_risks_issues", title: "Risks/Issues" },
+                        { data: "last_updated", title: "Updated On" },
+                        { data: "delivery_original", title: "Delivery Date Original" },
+                        { data: "delivery_baseline", title: "Delivery Date Baseline" },
+                        { data: "delivery_forecast", title: "Delivery Date Forecast" },
+                        { data: "budget", title: "Budget" },
+                        { data: "project_size", title: "Project Size" },
+                        { data: "buisness_sponsor", title: "Business Sponsor" },
+                        { data: "it_initiative_lead", title: "Initiative Lead" },
+                    ],
+                    createdRow: function (row, data, dataIndex) {
+                        // Log data for debugging purposes
+                        console.log(data);
+
+                        // Apply yellow background color if commentary_warning is true
+                        if (data.trend && data.trend.commentary_warning === true) {
+                            $(row).css('background-color', 'yellow');
+                        }
+
+                        // Remove the details-control class if there are no children
+                        if (data && (!data.children || data.children === 'N/A' || data.children.length === 0)) {
+                            console.log('No child data');
+                            $(row).find('td.details-control').removeClass('details-control');
+                        }
+
+                        // Ensure data is defined before accessing its properties
+                        if (data && (!data.children || data.children === 'N/A' || data.children.length === 0)) {
+                            console.log('No child data');
+                            $(row).find('td.details-control').removeClass('details-control');
+                        }
+                    }
+                });
+
+
+                // Add event listener for 'details-control' to show/hide child data
+                $('#data-table tbody').on('click', 'td.details-control', function () {
+                    const tr = $(this).closest('tr');
+                    const row = table.row(tr);
+
+                    // Log the row to check if it has data
+                    console.log('Row:', row);
+
+                    // Ensure the row exists and has data
+                    if (!row.data()) {
+                        console.error('Row not found or has no data');
+                        return; // Exit if there's no data
+                    }
+
+                    const rowData = row.data();
+                    console.log('Row Data:', rowData); // Log the row data
+
+                    if (row.child.isShown()) {
+                        // If the row is already open, close it
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    } else {
+                        // Open the row to show child data as a subtable
+                        const childData = rowData.children || []; // Use a fallback to prevent errors
+
+                        // Create the subtable HTML
+                        let subTableHtml = '<table class="sub-table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+                        subTableHtml += `
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Project Name</th>
+                                    <th>Business Goal</th>
+                                    <th>Portfolio</th>
+                                    <th>Business Line</th>
+                                    <th>Phase</th>
+                                    <th>Status</th>
+                                    <th>Commentary/Risk/Issues</th>
+                                    <th>Last Updated</th>
+                                    <th>Delivery Original Date</th>                                
+                                </tr>
+                            </thead>
+                        <tbody>`;
+
+                        if (childData.length > 0) {
+                            childData.forEach(child => {
+                                subTableHtml += `<tr>
+                                    <td><a href="${jiraURL + child.key || ''}" target="_blank">${child.key || 'N/A'}</a></td>
+                                    <td>${child.project_name}</td>
+                                    <td>${child.business_goal}</td>
+                                    <td>${child.portfolio}</td>
+                                    <td>${child.business_line}</td>
+                                    <td>${child.phase}</td>
+                                    <td>${child.rag_status}</td>
+                                    <td>${child.commentary_risks_issues}</td>
+                                    <td>${child.last_updated}</td>
+                                    <td>${child.delivery_org_date}</td>                                   
+                                </tr>`;
+                            });
+                        } else {
+                            subTableHtml += '<tr><td colspan="2">No child data available</td></tr>';
+                        }
+
+                        subTableHtml += '</tbody></table>';
+
+                        // Show the subtable in the row
+                        row.child(subTableHtml).show();
+                        tr.addClass('shown');
+                    }
+                });
+
+
+                // Function to get query parameters from the URL
+                function getQueryParam(param) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get(param);
+                }
+
+                // Populate Cards
+                function populateCards(data) {
+                    const cardContainer = $('#card-container');
+                    cardContainer.empty(); // Clear existing cards
+
+                    const environmentsArray = Object.values(data);
+                    console.log(environmentsArray);
+
+                    // Check if show_updates query parameter is true
+                    const showUpdates = getQueryParam('show_updates') === 'true';
+
+                    environmentsArray.forEach((env, index) => {
+                        const trendColor = env.trend.trend === 'up' ? 'green' :
+                            env.trend.trend === 'down' ? 'red' :
+                                env.trend.trend === 'maintain' ? 'blue' : '';
+
+                        const fortnightlyTrendColor = env.trend.fortnightly_trend === 'up' ? 'green' :
+                            env.trend.fortnightly_trend === 'down' ? 'red' :
+                                env.trend.fortnightly_trend === 'maintain' ? 'blue' : '';
+
+                        const monthlyTrendColor = env.trend.monthly_trend === 'up' ? 'green' :
+                            env.trend.monthly_trend === 'down' ? 'red' :
+                                env.trend.monthly_trend === 'maintain' ? 'blue' : '';
+
+                        const headerClass = env.rag_status.toLowerCase() === "green" ? 'green' :
+                            env.rag_status.toLowerCase() === "amber" ? 'amber' :
+                                env.rag_status.toLowerCase() === "red" ? 'red' :
+                                    env.rag_status.toLowerCase() === "on hold" ? 'gray' : 'blue';
+
+                        const budgetClass = env.budget === 'GREEN' ? 'green' :
+                            env.budget === 'AMBER' ? 'amber' :
+                                env.budget === 'RED' ? 'red' : 'blue';
+
+                        let reportCadence = env.report_cadence === 'Weekly' ? 'W' :
+                            env.report_cadence === 'Monthly' ? 'M' :
+                                env.report_cadence === 'Fortnightly' ? 'F' : '';
+
+                        const isPinned = pinnedEnvironments.includes(env.key);
+                        const pinIconSrc = isPinned ? 'static/images/icons8-pin-filled-100.png' : 'static/images/icons8-pin-100.png';
+
+                        let trendIcon = '';
+                        let fortnightlyTrendIcon = '';
+                        let monthlyTrendIcon = '';
+                        let projectSizeIcon = '';
+                        let trendTitle = '';
+
+                        switch (env.trend.trend.toLowerCase()) {
+                            case 'up':
+                                trendTitle = 'IMPROVE';
+                                break;
+                            case 'down':
+                                trendTitle = 'DECLINE';
+                                break;
+                            case 'maintain':
+                                trendTitle = 'SUSTAIN';
+                                break;
+                            default:
+                                trendTitle = '';  // Set to empty if none match
+                                break;
+                        }
+
+                        switch (env.trend.trend.toLowerCase()) {
+                            case ("up"):
+                                trendIcon = "icons8-double-up-100.png";
+                                break;
+                            case ("down"):
+                                trendIcon = "icons8-double-down-100.png";
+                                break;
+                            case ("maintain"):
+                                trendIcon = "icons8-double-right-100.png";
+                                break;
+                            default:
+                                trendIcon = "icons8-equal-sign-64.png";
+                        }
+
+                        switch (env.project_size) {
+                            case ("Small"):
+                                projectSizeIcon = `s-pie-100.png`;
+                                break;
+                            case ("Medium"):
+                                projectSizeIcon = "m-pie-100.png";
+                                break;
+                            case ("Large"):
+                                projectSizeIcon = "l-pie-100.png";
+                                break;
+                            case ("X-Large"):
+                                projectSizeIcon = "xl-pie-100.png";
+                                break;
+                            default:
+                                projectSizeIcon = "na-pie-100.png";
+                        }
+
+                        let projectSizeValue = 0;
+
+                        switch (env.project_size) {
+                            case ("Small"):
+                                projectSizeValue = 1;
+                                break;
+                            case ("Medium"):
+                                projectSizeValue = 2;
+                                break;
+                            case ("Large"):
+                                projectSizeValue = 3;
+                                break;
+                            case ("X-Large"):
+                                projectSizeValue = 4;
+                                break;
+                            default:
+                                projectSizeValue = 0;
+                        }
+
+                        // Truncate names as before
+                        let truncatedProjectName = env["Project name"];
+                        if (env["Project name"] !== null && env["Project name"].length > 27) {
+                            truncatedProjectName = env["Project name"].substring(0, 25) + '...';
+                        }
+
+                        let truncatedBusinessSponsor = env["buisness_sponsor"];
+                        if (env["buisness_sponsor"] !== null && env["buisness_sponsor"].length > 15) {
+                            truncatedBusinessSponsor = env["buisness_sponsor"].substring(0, 12) + '...';
+                        }
+
+                        let truncatedPortfolio = env["Portfolio"];
+                        if (env["Portfolio"] !== null && env["Portfolio"].length > 15) {
+                            truncatedPortfolio = env["Portfolio"].substring(0, 12) + '...';
+                        }
+
+                        let truncatedBusinessLine = env["business_line"];
+                        if (env["business_line"] !== null && env["business_line"].length > 15) {
+                            truncatedBusinessLine = env["business_line"].substring(0, 12) + '...';
+                        }
+
+                        let truncatedItIntLead = env["it_initiative_lead"];
+                        if (env["it_initiative_lead"] !== null && env["it_initiative_lead"].length > 15) {
+                            truncatedItIntLead = env["it_initiative_lead"].substring(0, 12) + '...';
+                        }
+
+                        let childIcon = '';
+                        if (env.children && env.children != 'N/A') {
+                            childIcon = `
+                                    <img class="child-icon"
+                                        src="static/images/icons8-hierarchy-100.png" data-index="${index}"
+                                        data-bs-toggle="modal" data-bs-target="#childModal">
+                            `;
+                        } else {
+                            childIcon = `
+                                <img class="child-icon"
+                                    src="static/images/icons8-child-100.png" style="visibility:hidden">
+                            `;
+                        }
+
+                        // Show star icon only if show_updates is true
+                        const starIcon = (showUpdates && env.trend.cadenceUpdated === false) ? `<img class="star view-details"
+                                            src="static/images/icons8-star-100.png">` : '';
+
+                        let infoIcon = '';
+                        if (env.commentary_risks_issues && env.commentary_risks_issues.toLowerCase() != 'n/a') {
+                            infoIcon = `
+                                    <img class="view-details" title="${env.commentary_risks_issues}"
+                                        src="static/images/icons8-info-100.png" data-index="${index}">
+                                `;
+                        } else {
+                            infoIcon = `
+                                <img class="view-details" src="static/images/icons8-info-100.png" style="visibility:hidden;">
+                            `;
+                        }
+
+                        const statusTextColor = 'brown';
+
+                        let warningIcon = '';
+                        if (env.trend.commentary_warning === true) {
+                            warningIcon = `
+                                <img class="warning-icon"
+                                    src="static/images/icons8-warning-48.png" 
+                                    title="Warning: Commentary contains issues">
+                            `;
+                        }
+
+                        // Card template
+                        const card = `
+                            <div class="col shown">
+                                <div class="card" id="">
+                                    <div class="header status-${headerClass}">
+                                        <div class="header-info">
+                                            <div class="build-number card-title">
+                                                <span class="owner-name" title="${env["Project name"]}">${truncatedProjectName}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="icon-container">
+                                        <div class="key-container">
+                                            <a href="${jiraURL + env.key}" style="color: #000; text-decoration: none;">${env.key}</a>
+                                        </div>
+                                        <div class="img-container" style="display: flex;">
+                                            <div class="new-icon">
+                                                ${childIcon}
+                                            </div>
+                                            <div class="new-icon">
+                                                ${infoIcon}
+                                            </div>
+                                            <div class="new-icon">
+                                                <img class="pin ${isPinned ? 'pinned' : ''}"
+                                                    src="${pinIconSrc}" data-index="${index}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="info-holder" style="padding:0.5rem; padding-top:5px; padding-right:5px">
+                                            <p><b>Phase:</b> <span class="owner-name">${env.phase}</span></p>
+                                            <p><b>Portfolio:</b> <span class="owner-name" title="${env.Portfolio}">${truncatedPortfolio}</span></p>
+                                            <p><b>Biz. Line:</b> <span class="owner-name" title="${env.business_line}">${truncatedBusinessLine}</span></p>
+                                            <p><b>BIz. Sponsor:</b> <span class="owner-name" title="${env.buisness_sponsor}">${truncatedBusinessSponsor}</span></p>
+                                            <p><b>IT Int. Lead:</b> <span class="owner-name" title="${env.it_initiative_lead}">${truncatedItIntLead}</span></p>
+                                            <p><b>Updated:</b> <span class="owner-name">${env.last_updated}</span></p>
+                                            <img class="expand view-details"
+                                                src="static/images/icons8-external-link-48.png" data-index="${index}"
+                                                data-bs-toggle="modal" data-bs-target="#detailsModal">
+                                            ${starIcon}
+                                        </div>
+                                        <div class="state-holder">
+                                            ${warningIcon}
+                                            <span class="owner-name" title="Trend: ${env.report_cadence}: ${trendTitle}">${reportCadence} : <img class="trend-icon" src="static/images/${trendIcon}"></span>
+                                            <!--<span class="owner-name" title="Project Size: ${env.project_size}">PS : <img class="project-size-icon" src="static/images/${projectSizeIcon}"/></span>-->
+                                            <span class="owner-name" title="Budget: ${env.budget}">B : <div class="budget budget-${budgetClass}"></div></span>
+                                            <span class="owner-name" title="Project Size: ${env.project_size}">
+                                                <p>PS :&nbsp;</p> <div class="signal-bars">
+                                                    <div class="bar bar1"></div>
+                                                    <div class="bar bar2"></div>
+                                                    <div class="bar bar3"></div>
+                                                    <div class="bar bar4"></div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Append the card to the container
+                        cardContainer.append(card);
+
+                        // Use a scoped selector to only select bars for the current card
+                        const currentCard = cardContainer.children().last();  // Get the last card (which is the current one being processed)
+                        const bars = currentCard.find('.bar');  // Find bars within the current card
+
+                        // Reset all bars to unfilled
+                        bars.removeClass('filled');
+
+                        // Fill bars up to the selected value
+                        if (projectSizeValue >= 1 && projectSizeValue <= 4) {
+                            for (let i = 0; i < projectSizeValue; i++) {
+                                bars.eq(i).addClass('filled');  // Use `eq(i)` to select the ith bar in the jQuery set
+                            }
+                        }
+                    });
+
+                    // Initialize tooltips for truncated owner names and business lines
+                    $('.owner-name').tooltip();
+                    $('.view-details').tooltip();
+                }
+
+
+                function addDummyCards() {
+                    const totalCards = $('#card-container .col:visible').length;
+                    const dummyCardsNeeded = 5 - totalCards;
+
+                    if (dummyCardsNeeded > 0) {
+                        for (let i = 0; i < dummyCardsNeeded; i++) {
+                            const dummyCard = `
+                                <div class="col" style="visibility:hidden">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Dummy Card ${i + 1}</h5>
+                                            <p class="card-text">Branch: N/A</p>
+                                            <p class="card-text">Owner: N/A</p>
+                                            <p class="card-text">Purpose: N/A</p>
+                                            <p class="card-text">End Date: N/A</p>
+                                            <button class="btn btn-secondary" disabled>View Details</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            $('#card-container').append(dummyCard);
+                        }
+                    }
+                }
+
+                // Initial Card Population
+                populateCards(filteredData);
+
+                // Add dummy cards if necessary initially
+                // addDummyCards();
+
+                $('.dataTables_filter input').attr('type', 'text');
+
+                // Select all instances of data-table_filter
+                const datatableFilters = document.querySelectorAll('#data-table_filter');
+
+                if (datatableFilters.length > 1) {
+                    // Remove the second instance (index 1) if present
+                    datatableFilters[1].remove();
+                    console.log('Second instance of data-table_filter removed');
+                } else {
+                    console.log('No duplicate data-table_filter found');
+                }
+
+                // Move the remaining (first) DataTable filter to the right-nav-container
+                const datatableFilter = datatableFilters[0]; // Use the first (remaining) instance
+                const form = document.getElementById('form');
+                if (form !== null) {
+                    form.remove(); // Remove the form if it exists
+                }
+
+                const rightNavContainer = document.querySelector('.right-nav-container');
+                if (rightNavContainer && datatableFilter) {
+                    rightNavContainer.appendChild(datatableFilter); // Append the filter to the right-nav-container
+                    document.querySelector('#data-table_filter label').childNodes[0].nodeValue = ''; // Clear the label's child text node value
+                } else {
+                    console.error('Right nav container or DataTable filter element is missing');
+                }
+
+                // Custom search handling to filter cards based on DataTable search
+                $('#data-table_filter input').on('keyup', function () {
+                    var searchValue = this.value.trim();
+
+                    // Log the search value for debugging
+                    console.log("Search Value: " + searchValue);
+
+                    // If search is empty, show all cards and exit early
+                    if (searchValue === '') {
+                        $('#card-container .col').addClass('shown').show();
+                        console.log("Number of visible cards (after clear): " + $('#card-container .col:visible').length);
+                        cardCount.innerHTML = 'Showing ' + $('#card-container .col.shown').length + " of " + totalCount;
+                        return;
+                    }
+
+                    // Perform DataTable search
+                    table.search(searchValue).draw();
+
+                    // Hide all cards first
+                    $('#card-container .col').removeClass('shown').hide();
+
+                    // Debug: Print the count of hidden cards
+                    console.log("Number of hidden cards: " + $('#card-container .col:hidden').length);
+
+                    // Create a Set to store unique project keys
+                    var uniqueProjectKeys = new Set();
+
+                    // Collect unique project keys from the filtered DataTable rows
+                    table.rows({ filter: 'applied' }).every(function () {
+                        var rowData = this.data();
+                        uniqueProjectKeys.add(rowData["key"]); // Assuming 'key' is the field in DataTable
+                    });
+
+                    // Log unique project keys for debugging
+                    console.log("Unique project keys: ", Array.from(uniqueProjectKeys));
+
+                    // Show only the cards that match the unique project keys
+                    $('#card-container .card').each(function () {
+                        var card = $(this);
+                        var projectKey = card.find('.key-container a').text().trim(); // Get the project key from the card
+
+                        // Debug: Log each card and its project key
+                        console.log("Card project key: " + projectKey);
+
+                        // Show the card if its project key is in the Set
+                        if (uniqueProjectKeys.has(projectKey)) {
+                            console.log(card.parent())
+                            card.parent().addClass('shown').show(); // Only show its direct parent (the .col)
+                            console.log("Showing card for project key: " + projectKey);
+                        }
+                    });
+
+                    // Log the number of visible cards after filtering
+                    console.log("Number of visible cards (after filtering): " + $('#card-container .col.shown').length);
+                    cardCount.innerHTML = 'Showing ' + $('#card-container .col.shown').length + " of " + totalCount;
+
+                    // Add dummy cards if the number of displayed cards is less than 5
+                    // addDummyCards();
+                });
+
+
+                $(document).on('click', '.view-details', function () {
+                    modalIndex = $(this).data('index');
+                    populateModalTable();
+                });
+
+                $(document).on('click', '.child-icon', function () {
+                    modalIndex = $(this).data('index');
+                    populateChildTable();
+                })
+
+                // Destroy the DataTable when the modal is closed
+                $('#detailsModal').on('hidden.bs.modal', function () {
+                    $('#modal-table').DataTable().destroy();
+                });
+                // toggleTableView();
+            }
+            $.fn.dataTable.ext.errMode = 'none';
+            fetchData();
+            fetchTimeStamp();
+            // document.getElementById('data-table_wrapper').style.display = 'none';
+        });
+    </script>
+    <script>
+        async function fetchTimeStamp() {
+            try {
+                const response = await fetch('/get_timestamp');
+                if (!response.ok) {
+                    throw new Error('NETWORK RESPONSE FAILED: Time stamp not found');
+                }
+                const data = await response.json();
+                console.log(data);
+                if (data.refresh == true) {
+                    location.reload();
+                }
+                const lastupdated = document.getElementById('lastUpdated');
+                lastupdated.textContent = data.timestamp;
+            } catch (error) {
+                console.error('Failed to fetch timestamp', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

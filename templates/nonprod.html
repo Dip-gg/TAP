@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projected vs Procured Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
+    <style>
+        .body-container {
+            display: flex;
+            height: 90vh;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <h2>TEMS HW Dashboard</h2>
+            </a>
+            <img class="logo" src="{{url_for('static', filename='images/logo.svg')}}" alt="logo">
+        </div>
+    </nav>
+    <div class="body-container container-fluid">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <h4>Categories</h4>
+            <div id="prod/nonProdDropdown"></div>
+            <div id="categoryDropdown"></div>
+            <div id="subCategoryDropdown" class="hidden mt-3"></div>
+            <div id="subSubCategoryDropdown" class="hidden mt-3"></div>
+            <h5 class="mt-4">Compare Options</h5>
+            <form id="compareForm">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="ram" id="compareRam" checked>
+                    <label class="form-check-label" for="compareRam">Compare RAM</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="cpu" id="compareCpu">
+                    <label class="form-check-label" for="compareCpu">Compare CPU</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="hdd" id="compareHdd">
+                    <label class="form-check-label" for="compareHdd">Compare HDD</label>
+                </div>
+                <button type="button" class="btn btn-primary mt-3" onclick="updateChart()">Update Chart</button>
+            </form>
+        </div>
+
+        <!-- Content -->
+        <div id="content">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <footer class="footer bg-body-tertiary text-center text-lg-start sticky-bottom">
+        <div class="text-center p-3">
+            <a target="_blank" href="https://jira/servicedesk/customer/portal/1/create/2061">Feedback</a>
+        </div>
+    </footer>
+
+    <script>
+        let projectedData = {};
+        let procuredData = {};
+        let selectedCategory = 'nonprod_total';
+        let selectedSubCategory = null;
+        let selectedSubSubCategory = null;
+        let compareRam = true, compareCpu = false, compareHdd = false;
+        let chart;
+
+        window.onload = async function () {
+
+            // Populate main category dropdown
+            const prodNonProdDropdown = document.getElementById('prod/nonProdDropdown');
+            prodNonProdDropdown.innerHTML = `
+                <select id="categorySelect" class="form-select" onchange="handleCategoryChange()">
+                    <option value="select_category">Non-Prod</option>
+                    <option value=""></option>
+                    
+                </select>
+            `;
+            // const categoryDropdown = document.getElementById('categoryDropdown');
+            // categoryDropdown.innerHTML = `
+            //     <select id="categorySelect" class="form-select" onchange="handleCategoryChange()">
+            //         <option value="nonprod_total">Total</option>
+            //         <option value="nonprod_dc_total">Data Center Total</option>
+            //         <option value="nonprod_p_total">P Total</option>
+            //         <option value="nonprod_v_total">V Total</option>
+            //     </select>
+            // `;
+
+            // Fetch data before rendering the chart or handling other logic
+            try {
+                await fetchProdData();
+                await fetchNonProdData();
+                renderChart();  // Now that the data is fetched, render the chart
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        };
+
+        // Function to fetch procured data using async/await
+        // Function to fetch procured data using async/await
+        async function fetchProdData() {
+            try {
+                const response = await fetch('/get_prod_data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                // Assign the response data directly to procuredData
+                procuredData = await response.json();
+                console.log('Procured Data:', procuredData);
+            } catch (error) {
+                console.error('Error fetching procured data:', error);
+                throw error; // Rethrow error to handle in onload function
+            }
+        }
+
+        // Function to fetch projected data using async/await
+        async function fetchNonProdData() {
+            try {
+                const response = await fetch('/get_non_prod_data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                // Assign the response data directly to projectedData
+                projectedData = await response.json();
+                console.log('Projected Data:', projectedData);
+            } catch (error) {
+                console.error('Error fetching projected data:', error);
+                throw error; // Rethrow error to handle in onload function
+            }
+        }
+
+        // Handle change in main category
+        function handleCategoryChange() {
+            selectedCategory = document.getElementById('categorySelect').value;
+            const projected = projectedData.nonprod.projected_nonprod[selectedCategory];
+            const subCategoryDropdown = document.getElementById('subCategoryDropdown');
+            const hasSubs = Array.isArray(projected) && projected.length > 0;
+
+            // Populate subcategory dropdown if it exists
+            if (hasSubs) {
+                const subCategories = projected.map(sub => `<option value="${sub.key}">${sub.key}</option>`).join('');
+                subCategoryDropdown.innerHTML = `
+            <select id="subCategorySelect" class="form-select" onchange="handleSubCategoryChange()">
+                <option value="">Show Total</option>  <!-- Add option for total by default -->
+                ${subCategories}
+            </select>
+        `;
+                subCategoryDropdown.classList.remove('hidden');
+            } else {
+                subCategoryDropdown.classList.add('hidden');
+                selectedSubCategory = null;  // Reset subcategory when not applicable
+            }
+
+            document.getElementById('subSubCategoryDropdown').classList.add('hidden');
+            renderChart();  // Render chart for the category total initially
+        }
+
+        // Handle change in subcategory
+        function handleSubCategoryChange() {
+            selectedSubCategory = document.getElementById('subCategorySelect').value;
+            const projected = projectedData.nonprod.projected_nonprod[selectedCategory].find(sub => sub.key === selectedSubCategory);
+            const subSubCategoryDropdown = document.getElementById('subSubCategoryDropdown');
+            const hasSubSubs = projected?.sub?.length > 0;
+
+            // Populate sub-subcategory dropdown if it exists
+            if (hasSubSubs) {
+                const subSubCategories = projected.sub.map(sub => `<option value="${sub.key}">${sub.key}</option>`).join('');
+                subSubCategoryDropdown.innerHTML = `
+                <select id="subSubCategorySelect" class="form-select" onchange="handleSubSubCategoryChange()">
+                    <option value="">Select Sub-Subcategory</option>
+                    ${subSubCategories}
+                </select>
+            `;
+                subSubCategoryDropdown.classList.remove('hidden');
+            } else {
+                subSubCategoryDropdown.classList.add('hidden');
+                selectedSubSubCategory = null;
+            }
+
+            renderChart();
+        }
+
+        // Handle change in sub-subcategory
+        function handleSubSubCategoryChange() {
+            selectedSubSubCategory = document.getElementById('subSubCategorySelect').value;
+            renderChart();
+        }
+
+        function updateChart() {
+            compareRam = document.getElementById('compareRam').checked;
+            compareCpu = document.getElementById('compareCpu').checked;
+            compareHdd = document.getElementById('compareHdd').checked;
+            renderChart();
+        }
+
+        // Function to sum RAM, CPU, and HDD for a list of dictionaries
+        function sumValuesForCategory(categoryList) {
+            return categoryList.reduce((acc, item) => {
+                acc.ram += parseInt(item.ram) || 0;
+                acc.cpu += parseInt(item.cpu) || 0;
+                acc.hdd += parseInt(item.hdd) || 0;
+                return acc;
+            }, { ram: 0, cpu: 0, hdd: 0 });
+        }
+
+        // Function to sum RAM, CPU, and HDD for a list of dictionaries, ignoring any subcategories
+        function sumValuesForCategoryIgnoringSub(categoryList) {
+            return categoryList.reduce((acc, item) => {
+                acc.ram += parseInt(item.ram) || 0;
+                acc.cpu += parseInt(item.cpu) || 0;
+                acc.hdd += parseInt(item.hdd) || 0;
+                return acc;
+            }, { ram: 0, cpu: 0, hdd: 0 });
+        }
+
+        // Render the chart dynamically
+        function renderChart() {
+            const labels = ['Projected', 'Procured'];
+            console.log(projectedData);
+            console.log(selectedCategory);
+
+            if (!projectedData.nonprod.projected_nonprod || !projectedData.nonprod.projected_nonprod[selectedCategory]) {
+                console.error(`Category ${selectedCategory} not found in projectedData`);
+                return;
+            }
+
+            let projected = projectedData.nonprod.projected_nonprod[selectedCategory];
+            let procured = procuredData.nonprod.procured_nonprod[selectedCategory];
+
+            // Check if the category is a list (like nonprod_dc_total, nonprod_p_total, or nonprod_v_total)
+            if (Array.isArray(projected)) {
+                if (selectedSubCategory) {
+                    if (selectedSubCategory === "") {
+                        projected = sumValuesForCategoryIgnoringSub(projected);
+                        procured = procured ? sumValuesForCategoryIgnoringSub(procured) : { ram: 0, cpu: 0, hdd: 0 };
+                    } else {
+                        projected = projected.find(sub => sub.key === selectedSubCategory) || { ram: "0", cpu: "0", hdd: "0" };
+                        procured = procured?.find(sub => sub.key === selectedSubCategory) || { ram: "0", cpu: "0", hdd: "0" };
+
+                        if (selectedSubSubCategory) {
+                            projected = projected.sub.find(sub => sub.key === selectedSubSubCategory) || { ram: "0", cpu: "0", hdd: "0" };
+                            procured = procured?.sub?.find(sub => sub.key === selectedSubSubCategory) || { ram: "0", cpu: "0", hdd: "0" };
+                        }
+                    }
+                } else {
+                    projected = sumValuesForCategoryIgnoringSub(projected);
+                    procured = procured ? sumValuesForCategoryIgnoringSub(procured) : { ram: 0, cpu: 0, hdd: 0 };
+                }
+            } else {
+                projected = projected || { ram: "0", cpu: "0", hdd: "0" };
+                procured = procured || { ram: "0", cpu: "0", hdd: "0" };
+            }
+
+            const projectedValues = {
+                ram: parseInt(projected.ram) || 0,
+                cpu: parseInt(projected.cpu) || 0,
+                hdd: parseInt(projected.hdd) || 0
+            };
+
+            const procuredValues = {
+                ram: parseInt(procured.ram) || 0,
+                cpu: parseInt(procured.cpu) || 0,
+                hdd: parseInt(procured.hdd) || 0
+            };
+
+            let ramData = [], cpuData = [], hddData = [];
+            if (compareRam) ramData = [projectedValues.ram, procuredValues.ram];
+            if (compareCpu) cpuData = [projectedValues.cpu, procuredValues.cpu];
+            if (compareHdd) hddData = [projectedValues.hdd, procuredValues.hdd];
+
+            const data = {
+                labels: labels,
+                datasets: []
+            };
+
+            if (compareRam) {
+                data.datasets.push({
+                    label: 'RAM',
+                    data: ramData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    fill: false
+                });
+            }
+            if (compareCpu) {
+                data.datasets.push({
+                    label: 'CPU',
+                    data: cpuData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    fill: false
+                });
+            }
+            if (compareHdd) {
+                data.datasets.push({
+                    label: 'HDD',
+                    data: hddData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                });
+            }
+
+            if (chart) chart.destroy();
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>
